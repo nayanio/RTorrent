@@ -1,16 +1,19 @@
-const http = require('http');
-const io = require('socket.io')(http);
+const app = require('express')();
+const server = require('http').Server(app);
+const io = require('socket.io')(server);
+server.listen(9000);
 class Socket {
     constructor() {
-        this.connect();
+
     }
 
     emit(obj, channal = 'webt') {
-        console.log('[SOCKET EMIT]', obj.infoHash);
+        // console.log('[SOCKET EMIT]', obj.infoHash);
         io.emit(channal, obj);
     }
 
     connect() {
+        console.log('Socket started sucessfully')
         io.on('connection', s => {
             console.error('new connection');
         });

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './Row.css';
+import CONFIG from '../config';
 
 class Row extends Component {
 
@@ -14,8 +15,7 @@ class Row extends Component {
   }
 
   deleteClick() {
-    console.log('This is on click', this.props.data.infoHash);
-    this.callBackendAPI(`/api/delete/${this.props.data.infoHash}`)
+    this.callBackendAPI(`${CONFIG.base_path}/api/delete/${this.props.data.infoHash}`)
       .then(res => console.log(res))
       .catch(err => console.log(err));
   }
@@ -25,17 +25,14 @@ class Row extends Component {
       isPause: !state.isPause
     }));
     if (this.state.isPause) {
-      console.log('Resume', this.props.data.infoHash);
-      this.callBackendAPI(`/api/resume/${this.props.data.infoHash}`)
+      this.callBackendAPI(`${CONFIG.base_path}/api/resume/${this.props.data.infoHash}`)
         .then(res => console.log(res))
         .catch(err => console.log(err));
     } else {
-      console.log('Pause', this.props.data.infoHash);
-      this.callBackendAPI(`/api/pause/${this.props.data.infoHash}`)
+      this.callBackendAPI(`${CONFIG.base_path}/api/pause/${this.props.data.infoHash}`)
         .then(res => console.log(res))
         .catch(err => console.log(err));
     }
-
   }
 
   componentDidMount() {
@@ -69,7 +66,7 @@ class Row extends Component {
 
   render() {
     const pb = {
-      width: `${this.props.data.progress * 100}%`
+      width: `${parseFloat((this.props.data.progress * 100).toFixed(2))}%`
     }
     return (
       <div className="row">
@@ -80,7 +77,7 @@ class Row extends Component {
           <img src="https://homepages.cae.wisc.edu/~ece533/images/airplane.png" className="rounded img" alt="No"></img>
         </div>
         <div className="col-3">
-          <h4>{this.props.data.name}</h4>
+          <h5>{this.props.data.name}</h5>
         </div>
         <div className="col-3">
           <div className="progress">
@@ -88,13 +85,13 @@ class Row extends Component {
           </div>
         </div>
         <div className="col-1">
-          <h4>{this.byteToMb(this.props.data.downloadSpeed)} MB/s</h4>
+          <small>{this.byteToMb(this.props.data.downloadSpeed)} MB/s</small>
         </div>
         <div className="col-1">
-          <h4>{this.byteToMb(this.props.data.downloaded)}/{this.byteToMb(this.props.data.length)} MB</h4>
+          <small>{this.byteToMb(this.props.data.downloaded)}/{this.byteToMb(this.props.data.length)} MB</small>
         </div>
         <div className="col-1">
-          <h4>{this.millisecondToHrt(this.props.data.timeRemaining)}</h4>
+          <small>{this.millisecondToHrt(this.props.data.timeRemaining)}</small>
         </div>
         <div className="col-1">
           <button type="button" className="btn btn-primary btn-sm" onClick={this.deleteClick}><i className="material-icons">delete_outline</i></button>

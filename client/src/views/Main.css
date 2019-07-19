@@ -7,3 +7,8 @@
 .header{
     height: 50px; 
 }
+
+.bottom-bar{
+    padding: 20px;
+    background: #f9f9f9;
+}

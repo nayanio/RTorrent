@@ -8,6 +8,7 @@ class WTorrent {
     constructor() {
         this.client = new WebTorrent();
         this.client.on('torrent', function (torrent) {
+            console.log('CLient torrent');
             torrent.on('download', function (bytes) {
                 if ((new Date().getTime() - lastEmit) > 1000) {
                     lastEmit = new Date().getTime();
@@ -19,27 +20,26 @@ class WTorrent {
             torrent.on('done', function () {
                 const tObject = new Torrent(torrent);
                 tObject.setIsDone(true);
-                socket.emit(tObject);
+                socket.emit(tObject, 'webt_done');
             });
         });
         this.client.on('error', function (err) {
             console.log('[TCLIENT ERROR]', err);
+            socket.emit('err', 'webt_error');
         });
     }
 
-    add(magnetURI, path = `${__dirname}/../public/`) {
+    add(magnetURI, path = `${__dirname}/../downlaod/`) {
         const options = {
             maxWebConns: 5,
             path: path,
         }
         return new Promise((resolve, reject) => {
             const t = this.client.get(magnetURI);
-            if (t) resolve(tObject);
+            if (t) resolve(new Torrent(t));
             else {
-                this.client.add(magnetURI, options, function (torrent) {
-                    const tObject = new Torrent(torrent);
-                    resolve(tObject);
-                });
+                this.client.add(magnetURI, options, function (torrent) {});
+                resolve({messag: 'Added successfully'});
             }
         });
     }

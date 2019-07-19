@@ -1,67 +1,96 @@
 import React, { Component } from 'react';
 import './Main.css';
-
+import CONFIG from '../config';
 import HeaderRow from '../components/HeaderRow';
 import Row from '../components/Row';
+
+import { onTorrentDone, onTorrentUpdate, onTorrentError } from '../services/socker';
 
 class Main extends Component {
     constructor(props) {
         super();
         this.state = {
             isLoading: true,
-            downloads: {
-                '08ada5a7a6183aae1e09d831df6748d566095a10': {
-                    "length": 129302391,
-                    "pieceLength": 131072,
-                    "lastPieceLength": 65399,
-                    "downloaded": 0,
-                    "downloadSpeed": 0,
-                    "uploaded": 0,
-                    "progress": 0.39,
-                    "infoHash": "08ada5a7a6183aae1e09d831df6748d566095a10",
-                    "magnetURI": "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F",
-                    "numPeers": 11,
-                    "name": "Sintel",
-                    "dn": "Sintel",
-                    "isDone": true,
-                    "timeRemaining": 10500000
-                },
-                '18ada5a7a6183aae1e09d831df6748d566095a10': {
-                    "length": 129302391,
-                    "pieceLength": 131072,
-                    "lastPieceLength": 65399,
-                    "downloaded": 0,
-                    "downloadSpeed": 0,
-                    "uploaded": 0,
-                    "progress": 0.86,
-                    "infoHash": "18ada5a7a6183aae1e09d831df6748d566095a10",
-                    "magnetURI": "magnet:?xt=urn:btih:08ada5a7a6183aae1e09d831df6748d566095a10&dn=Sintel&tr=udp%3A%2F%2Fexplodie.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Ftracker.empire-js.us%3A1337&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=wss%3A%2F%2Ftracker.btorrent.xyz&tr=wss%3A%2F%2Ftracker.fastcast.nz&tr=wss%3A%2F%2Ftracker.openwebtorrent.com&ws=https%3A%2F%2Fwebtorrent.io%2Ftorrents%2F",
-                    "numPeers": 11,
-                    "name": "Sintel",
-                    "dn": "Sintel",
-                    "isDone": false,
-                    "timeRemaining": 5940000
-                }
-            }
+            downloads: {},
+            new_uri: ''
         }
+
+        onTorrentDone(torrent => {
+            const downloads = this.state.downloads;
+            downloads[torrent.infoHash] = torrent;
+            this.setState({
+                downloads
+            });
+        });
+
+        onTorrentUpdate(torrent => {
+            const downloads = this.state.downloads;
+            downloads[torrent.infoHash] = torrent;
+            this.setState({
+                downloads
+            });
+        });
+
+        onTorrentError(torrent => {
+            const downloads = this.state.downloads;
+            downloads[torrent.infoHash] = torrent;
+            this.setState({
+                downloads
+            });
+        });
+
+        this.addNew = this.addNew.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    addNew() {
+        console.log('Add New clieck', this.state.new_uri);
+        if (this.state.new_uri.length > 0) {
+            fetch(`/api/torrents/new`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ magnetURI: this.state.new_uri })
+            }).then(response => {
+                // const body = await response.json();
+                if (response.status === 200) {
+                    this.setState({ new_uri: '' });
+                    const downloads = {};
+                    this.callBackendAPI(`${CONFIG.base_path}/api/torrents`)
+                        .then(res => {
+                            res.forEach(r => {
+                                downloads[r.infoHash] = r;
+                            });
+                            this.setState({ downloads });
+                        })
+                        .catch(err => console.log(err));
+                }
+            }).catch(err => console.log(err));
+        }
+    }
+
+    handleChange(event) {
+        this.setState({ new_uri: event.target.value });
     }
 
     componentDidMount() {
         // Call our fetch function below once the component mounts
-        // const downloads = {};
-        // this.callBackendAPI()
-        //     .then(res => {
-        //         res.forEach(r => {
-        //             downloads[r.infoHash] = r;
-        //         });
-        //         this.setState({ downloads });
-        //     })
-        //     .catch(err => console.log(err));
+        const downloads = {};
+        this.callBackendAPI(`${CONFIG.base_path}/api/torrents`)
+            .then(res => {
+                res.forEach(r => {
+                    downloads[r.infoHash] = r;
+                });
+                this.setState({ downloads });
+            })
+            .catch(err => console.log(err));
     }
     // this.setState({ data: res.express })
     // Fetches our GET route from the Express server. (Note the route we are fetching matches the GET route from server.js
-    callBackendAPI = async () => {
-        const response = await fetch('/api/torrents');
+    callBackendAPI = async (path) => {
+        const response = await fetch(path);
         const body = await response.json();
 
         if (response.status !== 200) {
@@ -82,15 +111,15 @@ class Main extends Component {
                         <div className="sidebar-sticky">
                             <ul className="list-group">
                                 <li className="list-group-item d-flex justify-content-between align-items-center">
-                                    Cras justo odio
+                                    <h6>Downloading</h6>
                                     <span className="badge badge-primary badge-pill">14</span>
                                 </li>
                                 <li className="list-group-item d-flex justify-content-between align-items-center">
-                                    Dapibus ac facilisis in
+                                    <h6>Finished</h6>
                                     <span className="badge badge-primary badge-pill">2</span>
                                 </li>
                                 <li className="list-group-item d-flex justify-content-between align-items-center">
-                                    Morbi leo risus
+                                    <h6>Unfinished</h6>
                                     <span className="badge badge-primary badge-pill">1</span>
                                 </li>
                             </ul>
@@ -117,6 +146,19 @@ class Main extends Component {
                             </div>
                         </div>
                     </main>
+                </div>
+                <div className="fixed-bottom bottom-bar row">
+                    <div className="col-10 offset-2">
+                        <div className="form-row">
+                            <div className="col-11">
+                                <input type="text" value={this.state.new_uri} onChange={this.handleChange} className="form-control" placeholder="Enter magnetURI" id="magnetURI"></input>
+                            </div>
+                            <div className="col-1">
+                                <button onClick={this.addNew} className="col btn btn-success">ADD</button>
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
         );

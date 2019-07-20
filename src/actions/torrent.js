@@ -31,7 +31,7 @@ class WTorrent {
 
     add(magnetURI, path = `${__dirname}/../downlaod/`) {
         const options = {
-            maxWebConns: 5,
+            maxWebConns: 500,
             path: path,
         }
         return new Promise((resolve, reject) => {

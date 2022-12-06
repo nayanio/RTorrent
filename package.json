@@ -27,9 +27,9 @@
   "private": true,
   "productName": "sTorrent",
   "dependencies": {
-    "body-parser": "^1.19.0",
+    "body-parser": "^1.20.1",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "pm2": "^3.5.1",
     "socket.io": "^2.2.0",
     "webtorrent": "^0.105.0"
